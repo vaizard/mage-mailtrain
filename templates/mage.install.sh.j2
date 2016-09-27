@@ -1,0 +1,173 @@
+#!/bin/bash
+
+#####
+# ### UFW, USERS
+#####
+
+ufw allow 25/tcp
+ufw --force enable
+useradd mailtrain || true
+useradd zone-mta || true
+
+
+#####
+# ### MAILTRAIN
+#####
+
+mkdir -p /opt/mailtrain
+cd /opt/mailtrain
+
+mysql -u {{ mailtrain_mysql_username }} -p"{{ mailtrain_mysql_password }}" {{ mailtrain_mysql_database }} < /opt/mailtrain/setup/sql/mailtrain.sql
+mysql -u {{ mailtrain_mysql_username }} -p"{{ mailtrain_mysql_password }}" {{ mailtrain_mysql_database }} <<EOT
+INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('admin_email','admin@{{ mailtrain_hostname }}') ON DUPLICATE KEY UPDATE \`value\`='admin@{{ mailtrain_hostname }}';
+INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('default_address','admin@{{ mailtrain_hostname }}') ON DUPLICATE KEY UPDATE \`value\`='admin@{{ mailtrain_hostname }}';
+INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('smtp_hostname','localhost') ON DUPLICATE KEY UPDATE \`value\`='localhost';
+INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('smtp_disable_auth','') ON DUPLICATE KEY UPDATE \`value\`='';
+INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('smtp_user','mailtrain') ON DUPLICATE KEY UPDATE \`value\`='mailtrain';
+INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('smtp_pass','{{ mailtrain_smtp_password }}') ON DUPLICATE KEY UPDATE \`value\`='{{ mailtrain_smtp_password }}';
+INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('smtp_encryption','NONE') ON DUPLICATE KEY UPDATE \`value\`='NONE';
+INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('smtp_port','2525') ON DUPLICATE KEY UPDATE \`value\`='2525';
+INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('default_homepage','https://{{ mailtrain_hostname }}/') ON DUPLICATE KEY UPDATE \`value\`='https://{{ mailtrain_hostname }}';
+INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('service_url','htts://{{ mailtrain_hostname }}') ON DUPLICATE KEY UPDATE \`value\`='https://{{ mailtrain_hostname }}';
+INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('dkim_api_key','{{ mailtrain_dkim_apikey }}') ON DUPLICATE KEY UPDATE \`value\`='{{ mailtrain_dkim_apikey }}';
+EOT
+
+cat >> config/production.toml <<EOT
+user="mailtrain"
+group="mailtrain"
+[log]
+level="error"
+[www]
+port=80
+secret="`pwgen -1`"
+[mysql]
+password="{{ mailtrain_mysql_password }}"
+[redis]
+enabled=true
+[verp]
+enabled=true
+EOT
+
+# Install required node packages
+npm install --no-progress --production
+chown -R mailtrain:mailtrain .
+
+# Setup log rotation to not spend up entire storage on logs
+cat <<EOM > /etc/logrotate.d/mailtrain
+/var/log/mailtrain.log {
+    daily
+    rotate 12
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+    nomail
+}
+EOM
+
+if [ -d "/run/systemd/system" ]; then
+    # Set up systemd service script
+    cp setup/mailtrain.service /etc/systemd/system/
+    systemctl enable mailtrain.service
+else
+    # Set up upstart service script
+    cp setup/mailtrain.conf /etc/init/
+fi
+
+#####
+# ### UFW
+#####
+
+mkdir -p /opt/zone-mta
+cd /opt/zone-mta
+
+# Ensure queue folder
+mkdir -p /var/data/zone-mta/mailtrain
+
+# Setup installation configuration
+cat >> config/production.json <<EOT
+{
+    "user": "zone-mta",
+    "group": "zone-mta",
+    "queue": {
+        "db": "/var/data/zone-mta/mailtrain"
+    },
+    "smtpInterfaces": {
+        "feeder": {
+            "enabled": true,
+            "port": 2525,
+            "authentication": true
+        }
+    },
+    "api": {
+        "maildrop": false,
+        "user": "mailtrain",
+        "pass": "{{ mailtrain_smtp_password }}"
+    },
+    "log": {
+        "level": "info",
+        "syslog": true
+    },
+    "plugins": {
+        "core/email-bounce": false,
+        "core/http-bounce": {
+            "enabled": true,
+            "url": "http://localhost/webhooks/zone-mta"
+        },
+        "core/http-auth": {
+            "enabled": true,
+            "url": "http://localhost:8080/test-auth"
+        },
+        "core/default-headers": {
+            "futureDate": false,
+            "xOriginatingIP": false
+        },
+        "core/http-config": {
+            "enabled": true,
+            "url": "http://localhost/webhooks/zone-mta/sender-config?api_token={{ mailtrain_dkim_apikey }}"
+        },
+        "core/rcpt-mx": false
+    },
+    "zones": {
+        "default": {
+            "pool": [
+                {
+                    "address": "0.0.0.0",
+                    "name": "{{ mailtrain_hostname }}"
+                }
+            ]
+        },
+        "transactional": {
+            "processes": 1,
+            "connections": 1,
+            "pool": [
+                {
+                    "address": "0.0.0.0",
+                    "name": "{{ mailtrain_hostname }}"
+                }
+            ]
+        }
+    }
+}
+EOT
+
+# Install required node packages
+npm install --no-progress --production
+
+# Ensure queue folder is owned by MTA user
+chown -R zone-mta:zone-mta /var/data/zone-mta/mailtrain
+
+if [ -d "/run/systemd/system" ]; then
+    # Set up systemd service script
+    cp setup/zone-mta.service /etc/systemd/system/
+    systemctl enable zone-mta.service
+else
+    # Set up upstart service script
+    cp setup/zone-mta.conf /etc/init/
+fi
+
+# Start the service
+service zone-mta start
+service mailtrain start
+

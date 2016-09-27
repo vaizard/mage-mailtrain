@@ -1,0 +1,12 @@
+---
+mage_packages:
+  - pwgen
+  - redis-server
+  - nodejs
+  - git
+  - ufw
+  - build-essential
+  - dnsutils 
+  - python 
+  - software-properties-common
+  - curl

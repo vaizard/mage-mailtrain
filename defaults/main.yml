@@ -1,0 +1,12 @@
+---
+mailtrain_hostname:             "mailtrain"
+mailtrain_mysql_username:       "mailtrain"
+mailtrain_mysql_password:       "mailtrain"
+mailtrain_mysql_database:       "mailtrain"
+mailtrain_dkim_apikey:          "mailtrain"
+mailtrain_smtp_password:        "mailtrain"
+
+
+
+
+

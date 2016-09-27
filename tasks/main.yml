@@ -1,0 +1,26 @@
+---
+
+- apt: name= state=present
+- apt_repository: repo='ppa:chris-lea/redis-server'
+- shell: "curl -sL https://deb.nodesource.com/setup_6.x | bash -"
+
+- name: "Including distro-specific variables"
+  include_vars: "vars_{{ ansible_distribution }}.yml"
+  when: ansible_distribution in [ 'Ubuntu' ]
+  
+- name: "Setting things up for {{ ansible_distribution }}"
+  include: "setup_{{ ansible_distribution }}.yml"
+  when: ansible_distribution in [ 'Ubuntu' ]
+ 
+# Create database, user, password 
+ 
+- name: Putting the install script
+  template: src=mage.install.sh.j2 dest="/opt/mailtrain/mage.install.sh" mode="u=rwx,g=rx,o=rx"
+ 
+- name: Making sure databases have their extensions
+  shell: "/opt/mailtrain/mage.install.sh; sleep 1;"
+  become: yes
+  
+  # rm /opt/mailtrain/mage.install.sh
+ 
+ 
