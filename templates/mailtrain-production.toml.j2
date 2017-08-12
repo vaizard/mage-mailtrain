@@ -1,0 +1,19 @@
+user="mailtrain"
+group="mailtrain"
+[log]
+level="error"
+[www]
+port=80
+secret="{{ mailtrain_secret }}"
+proxy="{{ mailtrain_proxy }}"
+[mysql]
+user="{{ mailtrain_mysql_username }}"
+password="{{ mailtrain_mysql_password }}"
+[redis]
+enabled=true
+password="{{ mailtrain_redis_password }}"
+[queue]
+processes=5
+[cors]
+# Allow subscription widgets to be embedded
+origins="{{ mailtrain_cors_origins }}"
