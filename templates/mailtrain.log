@@ -1,0 +1,10 @@
+/var/log/mailtrain.log {
+    daily
+    rotate 12
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+    nomail
+}
