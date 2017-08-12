@@ -1,0 +1,70 @@
+{
+    "name": "Mailtrain",
+    "user": "zone-mta",
+    "group": "zone-mta",
+    "queue": {
+        "db": "/var/data/zone-mta/mailtrain"
+    },
+    "smtpInterfaces": {
+        "feeder": {
+            "enabled": true,
+            "port": 2525,
+            "processes": 2,
+            "authentication": true
+        }
+    },
+    "api": {
+        "maildrop": false,
+        "user": "{{ mailtrain_smtp_username }}",
+        "pass": "{{ mailtrain_smtp_password }}"
+    },
+    "log": {
+        "level": "info",
+        "syslog": true
+    },
+    "plugins": {
+        "core/email-bounce": false,
+        "core/http-bounce": {
+            "enabled": "main",
+            "url": "http://localhost/webhooks/zone-mta"
+        },
+        "core/http-auth": {
+            "enabled": ["receiver", "main"],
+            "url": "http://localhost:8080/test-auth"
+        },
+        "core/default-headers": {
+            "enabled": ["receiver", "main", "sender"],
+            "futureDate": false,
+            "xOriginatingIP": false
+        },
+        "core/http-config": {
+            "enabled": ["main", "receiver"],
+            "url": "http://localhost/webhooks/zone-mta/sender-config?api_token={{ mailtrain_dkim_apikey }}"
+        },
+        "core/rcpt-mx": false
+    },
+    "pools": {
+        "default": [{
+            "address": "0.0.0.0",
+            "name": "{{ mailtrain_hostname }}"
+        }]
+    },
+    "zones": {
+        "default": {
+            "processes": 3,
+            "connections": 5,
+            "throttling": false,
+            "pool": "default"
+        },
+        "transactional": {
+            "processes": 1,
+            "connections": 1,
+            "pool": "default"
+        }
+    },
+    "domainConfig": {
+        "default": {
+            "maxConnections": 4
+        }
+    }
+}
