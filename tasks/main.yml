@@ -1,8 +1,13 @@
 ---
 
-- apt: name= state=present
-- apt_repository: repo='ppa:chris-lea/redis-server'
-- shell: "curl -sL https://deb.nodesource.com/setup_6.x | bash -"
+- name: Add nodesource apt_keys
+  apt_key:
+    url: "https://deb.nodesource.com/gpgkey/nodesource.gpg.key"
+    state: present
+
+- apt_repository:
+    repo: "deb https://deb.nodesource.com/node_7.x {{ ansible_distribution_release }} main"
+    state: present
 
 - name: "Including distro-specific variables"
   include_vars: "vars_{{ ansible_distribution }}.yml"
@@ -12,15 +17,83 @@
   include: "setup_{{ ansible_distribution }}.yml"
   when: ansible_distribution in [ 'Ubuntu' ]
  
-# Create database, user, password 
- 
-- name: Putting the install script
-  template: src=mage.install.sh.j2 dest="/opt/mailtrain/mage.install.sh" mode="u=rwx,g=rx,o=rx"
- 
-- name: Making sure databases have their extensions
-  shell: "/opt/mailtrain/mage.install.sh; sleep 1;"
-  become: yes
-  
-  # rm /opt/mailtrain/mage.install.sh
- 
- 
+# Setup UFW
+
+- name: "Ensure UFW is enabled and denies all traffic by default"
+  ufw:
+    state: enabled
+    policy: deny
+
+- name: "Ensure UFW allows TCP traffic on ports 22, 25, 443." # omiting port 80 present in official installer
+  ufw:
+    rule: allow
+    port: '{{ item }}'
+    proto: tcp
+  with_items:
+    - 22
+    - 25
+    - 443
+
+# Clone stuff
+
+- name: Clone mailtrain from github
+  git: repo=https://github.com/Mailtrain-org/mailtrain.git dest=/opt/mailtrain version={{ mailtrain_version }}
+
+- name: Clone zone-mta from github
+  git: repo=https://github.com/zone-eu/zone-mta.git dest=/opt/zone-mta version={{ mailtrain_zonemta_version }}
+
+# Setting up the database
+
+- name: Putting the configuration script
+  template: src=mage-mailtrain-configure.sql.j2 dest="/opt/mailtrain/mage-mailtrain-configure.sql" mode="u=rwx,g=rx,o=rx"
+
+- name: Install the database
+  shell: 'mysql -u {{ mailtrain_mysql_username }} -p"{{ mailtrain_mysql_password }}" mailtrain < /opt/mailtrain/setup/sql/mailtrain.sql'
+
+- name: Configure mailtrain
+  shell: 'mysql -u {{ mailtrain_mysql_username }} -p"{{ mailtrain_mysql_password }}" mailtrain < /opt/mailtrain/mage-mailtrain-configure.sql'
+
+- name: Removing the configuration script
+  file:
+    path: /opt/mailtrain/mage-mailtrain-configure.sql
+    state: absent
+
+# Creating users
+
+- name: Ensuring mailtrain user is present.
+  user:
+    name: mailtrain
+
+- name: Ensuring zone-mta user is present.
+  user:
+    name: zone-mta
+    
+# Putting config files
+
+- name: "Make sure mailtrain's config.json is present."
+  template:
+    src: mailtrain-production.toml.j2
+    dest: /opt/mailtrain/config/production.toml
+
+- name: "Make sure mailtrain workers' config.json is present."
+  template:
+    src: mailtrain_workers_production.toml.j2
+    dest: /opt/mailtrain/workers/reports/config/production.toml
+
+- name: "Make sure mailtrain's logrotate conf file is present."
+  template:
+    src: mailtrain-logrotate
+    dest: /etc/logrotate.d/mailtrain
+
+- name: "Make sure mailtrain's config.json is present."
+  template:
+    src: zone-mta-production.json.j2
+    dest: /opt/zone-mta/config/production.json
+
+# NPM magic
+
+- name: Call npm install
+  shell: npm install --no-progress --production
+  args:
+    chdir: /opt/mailtrain
+
