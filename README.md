@@ -32,6 +32,7 @@ An Ansible role to install Mailtrain, following the official setup script https:
       redis_maxmemory_policy: "allkeys-lru"
   roles: 
     - role: mage-mysql
+    - role: mage-mysql-backup
     - role: mage-redis    
     - role: mage-mailtrain
 ```
