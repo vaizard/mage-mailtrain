@@ -6,6 +6,7 @@ An Ansible role to install Mailtrain, following the official setup script https:
 # Need a random password? Try `openssl rand -base64 64`
 - hosts: mailtrain
   vars:
+      mailtrain_homepage: "https://example.com/"
       mailtrain_hostname: "mailtrain.example.com"
       mailtrain_mysql_password: "aHWwUvDRnDQ0X4008JNEA/j4DvTjtJwT+CiKoAuCUDoSUAyeoD9Jtcdd7mlBMqBq"
       mailtrain_mysql_password_ro: "VKOqpsrkjKCWyoA/kyxz45wVBm9MUmQpegvS5mFX1h2NliJPqcH0GF56ADfXMaYv"
@@ -33,6 +34,6 @@ An Ansible role to install Mailtrain, following the official setup script https:
   roles: 
     - role: mage-mysql
     - role: mage-mysql-backup
-    - role: mage-redis    
+    - role: mage-redis
     - role: mage-mailtrain
 ```
