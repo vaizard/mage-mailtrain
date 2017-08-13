@@ -45,8 +45,14 @@
 
 # Setting up the database
 
-- name: Putting the configuration script
+- name: Putting the configuration sql script
   template: src=mage-mailtrain-configure.sql.j2 dest="/opt/mailtrain/mage-mailtrain-configure.sql" mode="u=rwx,g=rx,o=rx"
+
+- name: Patch the configuration sql scruot
+  lineinfile: dest=/opt/mailtrain/setup/sql/mailtrain.sql
+  args:
+    regexp: '^CREATE TABLE `'
+line: '^CREATE TABLE IF NOT EXISTS`'
 
 - name: Install the database
   shell: 'mysql -u {{ mailtrain_mysql_username }} -p"{{ mailtrain_mysql_password }}" mailtrain < /opt/mailtrain/setup/sql/mailtrain.sql'
