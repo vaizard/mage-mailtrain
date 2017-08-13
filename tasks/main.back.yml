@@ -109,10 +109,10 @@
     chdir: /opt/zone-mta
 
 - name: "Ensuring propper ownership is set"
-  file: path=/opt/mailtrain owner=mailtrain group=mailtrain recurse=yes
+  file: /opt/mailtrain owner=mailtrain group=mailtrain recurse=yes
 
-- name: "Ensuring propper ownership is set (config)"
-  file: path=/opt/mailtrain/config mode=o-rwx
+- name: Ensuring propper ownership is set (config)
+  file: /opt/mailtrain/config mode=o-rwx
 
 - name: Ensure mailtrain unitfile is set.
   shell: 'cp /opt/mailtrain/setup/mailtrain.service /etc/systemd/system/'

@@ -10,5 +10,5 @@ mage_packages:
   - python 
   - software-properties-common
   - curl
-  - mysql
+  - mysql-server
   - imagemagick
