@@ -62,39 +62,69 @@ An Ansible role to install Mailtrain, following the official setup script https:
     - role: mage-mailtrain
 ```
 
-## DKIM howto
+## Set up MX, DKIM, DMARK, SPF and PTR
 
-See also https://kb.spamexperts.com/227853/.
+MX, DKIM, DMARK, SPF and PTR are DNS records which spam filters use to figure out if e-mails were
+really sent by you (and not by a spammer who tries to conceal his identity to be able to continue
+send bulks of e-mails people never subscribed for). Assuming that you use zone-mta and your
+e-mails are to originate from a Mailtrain installation at `mailtrain.example.com` which is at IP
+123.124.125.126 and optionally from `mail.example.net`, you will need
+
+- the content of the files containing the private and public DKIM key this role generated for 
+  you - both are to be found in the /opt/dkim-keys directory, mailtrain.example.com.key (private)
+  mailtrain.example.com.pub (public) 
+- add 3 new TXT records and 1 new MX record for the mailtrain.example.com. These will look most 
+  likely quite similarly to the example below:
 
 ```
-mkdir /opt/dkim-keys
-chmod 700 /opt/dkim-keys
-pushd /opt/dkim-keys
-openssl genrsa -out mailtrain.example.com.key 2048
-openssl rsa -in mailtrain.example.com.key -out mailtrain.example.com.pub -pubout -outform PEM
+mailtrain.example.com                         MX    123.124.125.126
+mailtrain.example.com                        TXT    "v=spf1 mx a a:mail.example.net -all"
+default._domainkey.mailtrain.example.com     TXT    "k=rsa; p=[public key in one line];"
+_dmarc.mailtrain.example.com                 TXT    "v=DMARC1; p=reject"
+```
 
-#
-# ### On your name server, add the DKIM (domainkey), DMARC and SPF records. make sure you
-# ### know what each line does / what you are doing! The example shown below will
-# ### - provide a DKIM public key to check if messages were really signed by your server
-# ### - tell other mailservers to reject any mail from anything@mailtrain.example.com not sent
-# ###   via mailtrain.example.com or mail.example.net (via SPF)
-# ### - tell other mailservers to reject all messages that fail the DKIM signature check or
-# ###   or are delivered via a host other then allowed in the SPF record.
-# ### Basically even a small mistake in your DKIM/DMARC/SPF settings WILL cause your e-mails to never deliver!
-#
-#  default._domainkey.mailtrain.example.com     TXT    "k=rsa; p=[public key in one line];"
-#  mailtrain.example.com                        TXT    "v=spf1 mx a a:mail.example.net -all"
-#  _dmarc.mailtrain.example.com                 TXT    "v=DMARC1; p=reject"
-#
-# Configure mailtrain settings accoring to this:
-#
-# DKIM domain: mailtrain.example.com
-# DKIM selector: default
-# DKIM Private Key: [private key in /opt/dkim-keys/mailtrain.example.com.key]
-#
-# ZoneMTA will announce the public key presence under <DKIM selector>._domainkey.<DKIM domain>
-# and will sign all mails with the private key.
-#
-# To test things out, use http://dkimvalidator.com (add one-time address to the subscribers)
-#
+You can leave the DKIM entry as shown above, but refer to https://www.spfwizard.net/ and 
+https://www.unlocktheinbox.com/dmarcwizard/ for better understanding of what the above means
+and what values you might want to have in. You'll see that the above is a quite reasonable
+example that you can (with a possible small tweak to the SPF record) use as is.
+
+Now go to Mailtrain settings and set things up accoring to this:
+
+**DKIM domain:** mailtrain.example.com
+**DKIM selector:** default
+**DKIM Private Key:** [copy and paste the private key in /opt/dkim-keys/mailtrain.example.com.key]
+
+The above steps will have the following effect:
+
+- all messages sent by Mailtrain / Zone-mta will be signed by the DKIM Private Key (the signature 
+  becomes a part of the e-mail)
+- when a spamfilter encounters this signature, it will look for the 
+  **[DKIM selector]**._domainkey.**[DKIM domain]** TXT record, and use the public key stored there
+  to verify that the signature is valid
+- additionally, the spamfilter will look for a TXT SPF record and will look a if the e-mail was
+  sent from the IP address of mailtrain.example.com or mail.example.net.  If the sender IP or
+  domain is different, it will discard the e-mail as spam.
+- furthermore, the spamfilter looks for the DMARC record, which tells it what to do with mails
+  that aren't signed with DKIM or which don't have a valid signature. The example above will
+  tell the spamfilter to reject such a mail as well.
+- lastly, the spam filter will check if your sender domain has a MX record and if a SMTP server
+  listens on any of the standard ports.
+
+You are now almost set. To further confirm that you have full control over your network, the final
+step is to set up a PTR record, which will give the right answer for a reverse DNS lookup (answer
+to "what domain name is bound to IP address 123.124.125.126). If you run your own DNS, you probably
+know it will look similar to this:
+
+```
+126.125.124.123.in-addr.arpa. 	1800 	PTR 	mailtrain.example.com.
+```
+
+If you run Mailtrain on a VPS, you will have to find the PTR configuration somewhere in your 
+administration interface or ask your provider to help you.
+
+## Testing
+
+Use http://dkimvalidator.com (add one-time address to the subscribers of a testing list). When you
+are happy, move on to https://www.mail-tester.com which will give you more details, but allows
+only 3 tests per day for free.
+

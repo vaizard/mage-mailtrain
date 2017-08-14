@@ -139,6 +139,21 @@
     group: zone-mta
     recurse: yes
 
+- name: "Ensuring /opt/dkim-keys path exists and is set up properly"
+  file: path=/opt/dkim-keys state=directory mode=0700
+
+- name: "Ensure DKIM private key is present."
+  shell: "openssl genrsa -out {{ mailtrain_hostname }}.key 2048"
+  args:
+    chdir: /opt/dkim-keys
+    creates: "/opt/dkim-keys/{{ mailtrain_hostname }}.key"
+
+- name: "Ensure DKIM public key is present."
+  shell: "openssl rsa -in {{ mailtrain_hostname }}.key -out {{ mailtrain_hostname }}.pub -pubout -outform PEM"
+  args:
+    chdir: /opt/dkim-keys
+    creates: "/opt/dkim-keys/{{ mailtrain_hostname }}.pub"
+
 - name: Make sure zone-mta is enabled
   service: name=zone-mta enabled=yes state=restarted
 

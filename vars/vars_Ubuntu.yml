@@ -1,6 +1,5 @@
 ---
 mage_packages:
-  - pwgen
   - redis-server
   - nodejs
   - git
