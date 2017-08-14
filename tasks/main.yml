@@ -38,7 +38,7 @@
 # Clone stuff
 
 - name: Clone mailtrain from github
-  git: repo=https://github.com/Mailtrain-org/mailtrain.git dest=/opt/mailtrain version={{ mailtrain_version }}
+  git: repo=https://github.com/Mailtrain-org/mailtrain.git dest=/opt/mailtrain version={{ mailtrain_version }} force=yes
 
 - name: Clone zone-mta from github
   git: repo=https://github.com/zone-eu/zone-mta.git dest=/opt/zone-mta version={{ mailtrain_zonemta_version }}
@@ -48,11 +48,17 @@
 - name: Putting the configuration sql script
   template: src=mage-mailtrain-configure.sql.j2 dest="/opt/mailtrain/mage-mailtrain-configure.sql" mode="u=rwx,g=rx,o=rx"
 
-- name: Patch the configuration sql scruot
-  lineinfile: dest=/opt/mailtrain/setup/sql/mailtrain.sql
-  args:
+- name: Patch the configuration sql script (tables)
+  replace:
+    path: /opt/mailtrain/setup/sql/mailtrain.sql
     regexp: '^CREATE TABLE `'
-line: '^CREATE TABLE IF NOT EXISTS`'
+    replace: 'CREATE TABLE IF NOT EXISTS `'
+
+- name: Patch the configuration sql script (values)
+  replace:
+    path: /opt/mailtrain/setup/sql/mailtrain.sql
+    regexp: '^INSERT INTO `'
+    replace: 'INSERT IGNORE INTO `'
 
 - name: Install the database
   shell: 'mysql -u {{ mailtrain_mysql_username }} -p"{{ mailtrain_mysql_password }}" mailtrain < /opt/mailtrain/setup/sql/mailtrain.sql'
@@ -84,7 +90,7 @@ line: '^CREATE TABLE IF NOT EXISTS`'
 
 - name: "Make sure mailtrain workers' config.json is present."
   template:
-    src: mailtrain_workers_production.toml.j2
+    src: mailtrain-workers-production.toml.j2
     dest: /opt/mailtrain/workers/reports/config/production.toml
 
 - name: "Make sure mailtrain's logrotate conf file is present."

@@ -15,9 +15,12 @@ mailtrain_zonemta_version:      "6964091273"
 mailtrain_admin_email:          "hello@{{ mailtrain_hostname }}" 
 mailtrain_default_address:      "hello@{{ mailtrain_hostname }}"
 mailtrain_proxy:                "true" # set this to false if you don't put a reverse proxy infront of mailtrain
-mailtrain_secret:               "{{ 'ansible_machine_id'|password_hash('sha256', '{{ mailtrain_hostname }}') }}"
+mailtrain_secret:               "{{ ansible_machine_id | password_hash('sha256', mailtrain_hostname) }}"
+mailtrain_redis_password:       "{{ ansible_machine_id | password_hash('sha256', mailtrain_hostname) }}"
 mailtrain_cors_origins:         "['{{ mailtrain_homepage }}']"
-
+mailtrain_default_sender:       "My Awesome Company"
+mailtrain_default_from:         "{{ mailtrain_default_sender }}"
+mailtrain_default_postaddress:  "Default Street 1234, Default City"
 
 
 

@@ -1,11 +1,15 @@
-INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('admin_email','{{ mailtrain_admin_email }}') ON DUPLICATE KEY UPDATE \`value\`='{{ mailtrain_admin_email }}';
-INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('default_address','{{ mailtrain_default_address }}') ON DUPLICATE KEY UPDATE \`value\`='{{ mailtrain_default_address }}';
-INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('smtp_hostname','localhost') ON DUPLICATE KEY UPDATE \`value\`='localhost';
-INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('smtp_disable_auth','') ON DUPLICATE KEY UPDATE \`value\`='';
-INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('smtp_user','{{ mailtrain_smtp_username }}') ON DUPLICATE KEY UPDATE \`value\`='{{ mailtrain_smtp_username }}';
-INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('smtp_pass','{{ mailtrain_smtp_password }}') ON DUPLICATE KEY UPDATE \`value\`='{{ mailtrain_smtp_password }}';
-INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('smtp_encryption','NONE') ON DUPLICATE KEY UPDATE \`value\`='NONE';
-INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('smtp_port','2525') ON DUPLICATE KEY UPDATE \`value\`='2525';
-INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('default_homepage','{{ mailtrain_homepage }}') ON DUPLICATE KEY UPDATE \`value\`='{{ mailtrain_homepage }}';
-INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('service_url','https://{{ mailtrain_hostname }}/') ON DUPLICATE KEY UPDATE \`value\`='https://{{ mailtrain_hostname }}/';
-INSERT INTO \`settings\` (\`key\`, \`value\`) VALUES ('dkim_api_key','{{ mailtrain_dkim_apikey }}') ON DUPLICATE KEY UPDATE \`value\`='{{ mailtrain_dkim_apikey }}';
+INSERT INTO `settings` (`key`, `value`) VALUES ('admin_email','{{ mailtrain_admin_email }}') ON DUPLICATE KEY UPDATE `value`='{{ mailtrain_admin_email }}';
+INSERT INTO `settings` (`key`, `value`) VALUES ('default_address','{{ mailtrain_default_address }}') ON DUPLICATE KEY UPDATE `value`='{{ mailtrain_default_address }}';
+INSERT INTO `settings` (`key`, `value`) VALUES ('smtp_hostname','localhost') ON DUPLICATE KEY UPDATE `value`='localhost';
+INSERT INTO `settings` (`key`, `value`) VALUES ('smtp_disable_auth','') ON DUPLICATE KEY UPDATE `value`='';
+INSERT INTO `settings` (`key`, `value`) VALUES ('smtp_user','{{ mailtrain_smtp_username }}') ON DUPLICATE KEY UPDATE `value`='{{ mailtrain_smtp_username }}';
+INSERT INTO `settings` (`key`, `value`) VALUES ('smtp_pass','{{ mailtrain_smtp_password }}') ON DUPLICATE KEY UPDATE `value`='{{ mailtrain_smtp_password }}';
+INSERT INTO `settings` (`key`, `value`) VALUES ('smtp_encryption','NONE') ON DUPLICATE KEY UPDATE `value`='NONE';
+INSERT INTO `settings` (`key`, `value`) VALUES ('smtp_port','2525') ON DUPLICATE KEY UPDATE `value`='2525';
+INSERT INTO `settings` (`key`, `value`) VALUES ('default_homepage','{{ mailtrain_homepage }}') ON DUPLICATE KEY UPDATE `value`='{{ mailtrain_homepage }}';
+INSERT INTO `settings` (`key`, `value`) VALUES ('service_url','https://{{ mailtrain_hostname }}/') ON DUPLICATE KEY UPDATE `value`='https://{{ mailtrain_hostname }}/';
+INSERT INTO `settings` (`key`, `value`) VALUES ('dkim_api_key','{{ mailtrain_dkim_apikey }}') ON DUPLICATE KEY UPDATE `value`='{{ mailtrain_dkim_apikey }}';
+INSERT INTO `settings` (`key`, `value`) VALUES ('default_sender','{{ mailtrain_default_sender }}') ON DUPLICATE KEY UPDATE `value`='{{ mailtrain_default_sender }}';
+INSERT INTO `settings` (`key`, `value`) VALUES ('default_postaddress','{{ mailtrain_default_postaddress }}') ON DUPLICATE KEY UPDATE `value`='{{ mailtrain_default_postaddress }}';
+INSERT INTO `settings` (`key`, `value`) VALUES ('default_from','{{ mailtrain_default_from }}') ON DUPLICATE KEY UPDATE `value`='{{ mailtrain_default_from }}';
+
