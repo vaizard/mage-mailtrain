@@ -122,9 +122,24 @@ know it will look similar to this:
 If you run Mailtrain on a VPS, you will have to find the PTR configuration somewhere in your 
 administration interface or ask your provider to help you.
 
+## Running mailtrain behind a proxy
+
+This role expects mailtrain to be behind a reverse proxy with ssl termination. You may need to alter
+the production toml file to configure certs etc.
+
+NOTE to feature ourselves: Don't forget to portforward 2525 to get VERP running.
+
+
+
 ## Testing
 
 Use http://dkimvalidator.com (add one-time address to the subscribers of a testing list). When you
 are happy, move on to https://www.mail-tester.com which will give you more details, but allows
 only 3 tests per day for free.
 
+If in need to debug mailtrain, run it with
+
+```
+cd /opt/mailtrain
+NODE_ENV=production node index.js
+```

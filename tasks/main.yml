@@ -6,7 +6,7 @@
     state: present
 
 - apt_repository:
-    repo: "deb https://deb.nodesource.com/node_7.x {{ ansible_distribution_release }} main"
+    repo: "deb https://deb.nodesource.com/node_10.x {{ ansible_distribution_release }} main"
     state: present
 
 - name: "Including distro-specific variables"
@@ -41,7 +41,7 @@
   git: repo=https://github.com/Mailtrain-org/mailtrain.git dest=/opt/mailtrain version={{ mailtrain_version }} force=yes
 
 - name: Clone zone-mta from github
-  git: repo=https://github.com/zone-eu/zone-mta.git dest=/opt/zone-mta version={{ mailtrain_zonemta_version }}
+  git: repo=https://github.com/zone-eu/zone-mta.git dest=/opt/zone-mta version={{ mailtrain_zonemta_version }} force=yes
 
 # Setting up the database
 
@@ -155,7 +155,7 @@
     creates: "/opt/dkim-keys/{{ mailtrain_hostname }}.pub"
 
 - name: Make sure zone-mta is enabled
-  service: name=zone-mta enabled=yes state=restarted
+  service: name=zone-mta enabled=yes state=restarted daemon_reload=yes
 
 - name: Make sure zone-mta is enabled
-  service: name=mailtrain enabled=yes state=restarted
+  service: name=mailtrain enabled=yes state=restarted daemon_reload=yes

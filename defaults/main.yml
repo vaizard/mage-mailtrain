@@ -14,13 +14,40 @@ mailtrain_version:              "HEAD"
 mailtrain_zonemta_version:      "6964091273"
 mailtrain_admin_email:          "hello@{{ mailtrain_hostname }}" 
 mailtrain_default_address:      "hello@{{ mailtrain_hostname }}"
-mailtrain_proxy:                "true" # set this to false if you don't put a reverse proxy infront of mailtrain
-mailtrain_secret:               "{{ ansible_machine_id | password_hash('sha256', mailtrain_hostname) }}"
-mailtrain_redis_password:       "{{ ansible_machine_id | password_hash('sha256', mailtrain_hostname) }}"
+mailtrain_port:                 80
+mailtrain_secret:               "{{ ansible_machine_id | password_hash('sha512', 65534|random(seed=mailtrain_hostname)|string) }}"
+mailtrain_redis_password:       "{{ ansible_machine_id | password_hash('sha512', 65534|random(seed=mailtrain_hostname)|string) }}"
 mailtrain_cors_origins:         "['{{ mailtrain_homepage }}']"
 mailtrain_default_sender:       "My Awesome Company"
 mailtrain_default_from:         "{{ mailtrain_default_sender }}"
 mailtrain_default_postaddress:  "Default Street 1234, Default City"
+mailtrain_reports:              "true" # set this to false if you can't trust report template creators, see https://github.com/Mailtrain-org/mailtrain/blob/master/config/default.toml
+mailtrain_default_pass:         "$2a$10$mzKU71G62evnGB2PvQA4k..Wf9jASk.c7a8zRMHh6qQVjYJ2r/g/K"
+mailtrain_manage_users:         false
 
+# Set as many users as you need. The password is a bcrypt hash generated
+# by node-bcrypt, until ansible has merged bcrypt support, or until someone
+# opens up a PR with a command-line utility generating the hashes, you
+# may omit setting the password and the default value 'test' will be used.
+# The equivalent hash is $2a$10$mzKU71G62evnGB2PvQA4k..Wf9jASk.c7a8zRMHh6qQVjYJ2r/g/K
+# 
+# To get current passwords, use:
+# ```
+# mysql
+# use mailtrain; select * from users;
+# ```
+mailtrain_users:
+ - email: admin@example.com
+   user:  admin
+   pass:  '$2a$10$mzKU71G62evnGB2PvQA4k..Wf9jASk.c7a8zRMHh6qQVjYJ2r/g/K'
 
+mailtrain_manage_users:         false
+
+mailtrain_users:
+ - email: pavel@vaizard.org
+   user:  admin
+   pass:  '$2a$10$YkM4boB85D8uVm1JI85HNOGinFbYaPEIW7SiyDdIx7pF5y7m2Q6OS' # plaintext: wxSvahyQjtDDNZwzrEoW8X9DGr7LxgLoWhTM
+ - email: art@vaizard.org
+   user:  art
+   pass:  '$2a$10$vsRZoZKqK7ykYoPXzxuVKe3RVgbosw9KGS3HiaYgIGBIa0PvONIGC' # plaintext: JuOVoQ4ykIcSizCht6UrI79uA4EfVHgQQ90DCblf27g=
 

@@ -1,11 +1,12 @@
+# Modifications away from https://github.com/Mailtrain-org/mailtrain/blob/master/config/default.toml
+
 user="mailtrain"
 group="mailtrain"
 [log]
 level="error"
 [www]
-port=80
+port={{ mailtrain_port }}
 secret="{{ mailtrain_secret }}"
-#proxy="{{ mailtrain_proxy }}"
 [mysql]
 user="{{ mailtrain_mysql_username }}"
 password="{{ mailtrain_mysql_password }}"
@@ -17,3 +18,5 @@ processes=5
 [cors]
 # Allow subscription widgets to be embedded
 origins="{{ mailtrain_cors_origins }}"
+[reports]
+enabled="{{ mailtrain_reports }}"
